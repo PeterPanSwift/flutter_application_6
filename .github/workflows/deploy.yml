@@ -3,8 +3,7 @@ name: Deploy Flutter to GitHub Pages
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:  # 允許手動觸發
 
 jobs:
   build-and-deploy:
@@ -17,21 +16,32 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.22.0'
+        flutter-version: '3.24.0'
         channel: 'stable'
+        cache: true
         
+    - name: Flutter version
+      run: flutter --version
+      
     - name: Install dependencies
       run: flutter pub get
       
     - name: Enable web support
       run: flutter config --enable-web
       
+    - name: Analyze code
+      run: flutter analyze
+      
+    - name: Run tests
+      run: flutter test
+      
     - name: Build web
-      run: flutter build web --base-href="/flutter_application_6/"
+      run: flutter build web --base-href="/flutter_application_6/" --release
       
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       if: github.ref == 'refs/heads/main'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./build/web
+        cname: false
